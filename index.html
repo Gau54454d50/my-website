@@ -40,12 +40,18 @@
       <feGaussianBlur stdDeviation="10" result="blur"/>
       <feComposite in="SourceGraphic" in2="blur" operator="atop"/>
     </filter>
+    <filter id="glass-warp" x="0%" y="0%" width="100%" height="100%">
+     <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="3" result="turb"/>
+     <feDisplacementMap in="SourceGraphic" in2="turb" scale="30" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+<rect x="100" y="100" width="300" height="200" fill="#fff" filter="url(#glass-warp)" class="blink"/>
   </defs>
 
   <!-- 🐍 Snake in background -->
 
-  <rect width="2260" height="1000" fill="#001f3f" />
-  <rect id="snake" x="100" y="100" width="20" height="20" fill="#00FF00" stroke="#003300" stroke-width="1" opacity="1.0" class="glow"/>
+  <rect width="2260" height="1000" fill="#001f3f" filter="url(#glass-blur)"/>
+  <rect id="snake" x="100" y="100" width="20" height="20" fill="#00FF00" stroke="#003300" stroke-width="1" filter="url(#glass-warp)" opacity="1.0" class="glow"/>
 
   <foreignObject x="380" y="100" width="1500" height="120">
     <div xmlns="http://www.w3.org/1999/xhtml" class="glass-quote glow">
@@ -53,8 +59,8 @@
     </div>
   </foreignObject>
 
-  <circle id="led" cx="2200" cy="130" r="20" fill="red" filter="url(#glow)" cursor="pointer" class="blinking glow" onclick="toggleLED()" data-off="false" />
-  <g id="clock" transform="translate(120,120)" class="glow glass-quote">
+  <circle id="led" cx="2200" cy="130" r="20" fill="red" filter="url(#glass-warp)" cursor="pointer" class="blinking glow" onclick="toggleLED()" data-off="false" />
+  <g id="clock" transform="translate(120,120)" class="glow" filter="url(#glass-warp)">
     <circle r="50" fill="#ffffff10" stroke="white" stroke-opacity="0.3" stroke-width="3"/>
     <line id="hourHand" x1="0" y1="0" x2="0" y2="-25" stroke="white" stroke-width="4" stroke-linecap="round"/>
     <line id="minuteHand" x1="0" y1="0" x2="0" y2="-35" stroke="white" stroke-width="3" stroke-linecap="round"/>
@@ -63,7 +69,7 @@
 
   <g id="dropdown" visibility="hidden">
     <rect x="1980" y="160" width="250" height="320" rx="15" ry="15" fill="white" fill-opacity="0.05" stroke="white" stroke-width="1" />
-    <a ns1:href="https://www.youtube.com" target="_blank">
+    <a ns1:href="https://www.youtube.com/@gaurangnavelkar0" target="_blank">
       <image href="https://cdn.simpleicons.org/youtube/FFFFFF" x="2000" y="175" width="24" height="24" />
       <text x="2035" y="195" font-size="20" fill="#f8f8f8">YouTube</text>
     </a>
@@ -83,7 +89,7 @@
       <image href="https://cdn.simpleicons.org/reddit/FFFFFF" x="2000" y="335" width="24" height="24" />
       <text x="2035" y="355" font-size="20" fill="#f8f8f8">Reddit</text>
     </a>
-    <a ns1:href="https://github.com" target="_blank">
+    <a ns1:href="https://github.com/Gau54454d50" target="_blank">
       <image href="https://cdn.simpleicons.org/github/FFFFFF" x="2000" y="375" width="24" height="24" />
       <text x="2035" y="395" font-size="20" fill="#f8f8f8">GitHub</text>
     </a>
@@ -96,6 +102,145 @@
   <text id="bannerText" x="2260" y="800" font-size="80" font-family="sans-serif" fill="#f8f8f8" cursor="pointer" class="glow">
     Hi! Welcome to Gaurang's Website. Made with SVG. Click me!
   </text>
+  <foreignObject width="100%" height="100%" x="900" y="300">
+    <body xmlns="http://www.w3.org/1999/xhtml" style="margin:0;padding:0;">
+      <canvas id="glCanvas" width="600" height="400" style="background:transparent;"></canvas>
+      <script type="application/ecmascript"><![CDATA[
+        const canvas = document.getElementById("glCanvas");
+        const gl = canvas.getContext("webgl", { alpha: true });
+
+        if (!gl) {
+          canvas.outerHTML = "<div>WebGL not supported</div>";
+        } else {
+          const vsSource = `
+            attribute vec4 aPosition;
+            attribute vec4 aColor;
+            uniform mat4 uMVP;
+            varying lowp vec4 vColor;
+            void main(void) {
+              gl_Position = uMVP * aPosition;
+              vColor = aColor;
+            }
+          `;
+
+          const fsSource = `
+            varying lowp vec4 vColor;
+            void main(void) {
+              gl_FragColor = vColor;
+            }
+          `;
+
+          function createShader(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            return shader;
+          }
+
+          const vs = createShader(gl.VERTEX_SHADER, vsSource);
+          const fs = createShader(gl.FRAGMENT_SHADER, fsSource);
+
+          const program = gl.createProgram();
+          gl.attachShader(program, vs);
+          gl.attachShader(program, fs);
+          gl.linkProgram(program);
+          gl.useProgram(program);
+
+          const vertices = new Float32Array([
+            // XYZ + RGBA per vertex
+            // Front
+            -1, -1,  1,  1, 0, 0, 1,
+             1, -1,  1,  0, 1, 0, 1,
+             1,  1,  1,  0, 0, 1, 1,
+            -1,  1,  1,  1, 1, 0, 1,
+            // Back
+            -1, -1, -1,  1, 0, 1, 1,
+             1, -1, -1,  0, 1, 1, 1,
+             1,  1, -1,  1, 1, 1, 1,
+            -1,  1, -1,  0, 0, 0, 1
+          ]);
+
+          const indices = new Uint16Array([
+            0, 1, 2, 0, 2, 3,
+            4, 5, 6, 4, 6, 7,
+            3, 2, 6, 3, 6, 7,
+            0, 1, 5, 0, 5, 4,
+            1, 2, 6, 1, 6, 5,
+            0, 3, 7, 0, 7, 4
+          ]);
+
+          const vbo = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+          gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+          const ibo = gl.createBuffer();
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+          const FSIZE = vertices.BYTES_PER_ELEMENT;
+
+          const aPosition = gl.getAttribLocation(program, 'aPosition');
+          gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, FSIZE * 7, 0);
+          gl.enableVertexAttribArray(aPosition);
+
+          const aColor = gl.getAttribLocation(program, 'aColor');
+          gl.vertexAttribPointer(aColor, 4, gl.FLOAT, false, FSIZE * 7, FSIZE * 3);
+          gl.enableVertexAttribArray(aColor);
+
+          const uMVP = gl.getUniformLocation(program, 'uMVP');
+
+          function getProjectionMatrix(fov, aspect, near, far) {
+            const f = 1.0 / Math.tan(fov / 2);
+            const nf = 1 / (near - far);
+            return new Float32Array([
+              f / aspect, 0, 0, 0,
+              0, f, 0, 0,
+              0, 0, (far + near) * nf, -1,
+              0, 0, (2 * far * near) * nf, 0
+            ]);
+          }
+
+          function multiplyMatrix(a, b) {
+            const out = new Float32Array(16);
+            for (let i = 0; i < 4; i++)
+              for (let j = 0; j < 4; j++)
+                out[i * 4 + j] = a[0 * 4 + j] * b[i * 4 + 0] +
+                                 a[1 * 4 + j] * b[i * 4 + 1] +
+                                 a[2 * 4 + j] * b[i * 4 + 2] +
+                                 a[3 * 4 + j] * b[i * 4 + 3];
+            return out;
+          }
+
+          function getRotationY(angle) {
+            const c = Math.cos(angle), s = Math.sin(angle);
+            return new Float32Array([
+              c, 0, s, 0,
+              0, 1, 0, 0,
+             -s, 0, c, 0,
+              0, 0, -6, 1
+            ]);
+          }
+
+          gl.clearColor(0, 0, 0, 0);
+          gl.enable(gl.DEPTH_TEST);
+
+          const proj = getProjectionMatrix(Math.PI / 4, canvas.width / canvas.height, 0.1, 100);
+
+          function render(t) {
+            const rot = getRotationY(t * 0.001);
+            const mvp = multiplyMatrix(proj, rot);
+            gl.uniformMatrix4fv(uMVP, false, mvp);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+            requestAnimationFrame(render);
+          }
+
+          render(0);
+        }
+      ]]></script>
+    </body>
+  </foreignObject>
+
 
   <!-- 🧠 Logic -->
   <script type="application/ecmascript"><![CDATA[
@@ -173,4 +318,3 @@
     scroll();
   ]]></script>
 </svg>
-
