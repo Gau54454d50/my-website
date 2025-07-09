@@ -44,8 +44,15 @@
      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="3" result="turb"/>
      <feDisplacementMap in="SourceGraphic" in2="turb" scale="30" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
+    <filter id="glow-text" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+    <feOffset in="blur" dx="0" dy="0" result="offsetBlur"/>
+    <feMerge>
+      <feMergeNode in="offsetBlur"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
 
-<rect x="100" y="100" width="300" height="200" fill="#fff" filter="url(#glass-warp)" class="blink"/>
   </defs>
 
   <!-- 🐍 Snake in background -->
@@ -99,10 +106,88 @@
     </a>
   </g>
 
-  <text id="bannerText" x="2260" y="800" font-size="80" font-family="sans-serif" fill="#f8f8f8" cursor="pointer" class="glow">
+  <text id="bannerText" x="2260" y="800" font-size="80" font-family="sans-serif" fill="#f8f8f8" cursor="pointer" filter="url(#glow)">
     Hi! Welcome to Gaurang's Website. Made with SVG. Click me!
   </text>
-  <foreignObject width="100%" height="100%" x="900" y="300">
+  
+
+  <!-- 🧠 Logic -->
+  <script type="application/ecmascript"><![CDATA[
+   const text = document.getElementById("bannerText");
+    const led = document.getElementById("led");
+    const dropdown = document.getElementById("dropdown");
+    const snake = document.getElementById("snake");
+
+    let offset = 2260;
+    let textClicked = false;
+    let ledOn = true;
+    let dx = 3, dy = 0;
+    
+    function updateClock() {
+  	const now = new Date();
+  	const sec = now.getSeconds();
+  	const min = now.getMinutes();
+  	const hr = now.getHours() % 12;
+
+  	const secondAngle = sec * 6;             // 360° / 60s
+  	const minuteAngle = min * 6 + sec * 0.1;  // 360° / 60min
+  	const hourAngle = hr * 30 + min * 0.5;    // 360° / 12hr
+
+  	document.getElementById("secondHand").setAttribute("transform", `rotate(${secondAngle})`);
+  	document.getElementById("minuteHand").setAttribute("transform", `rotate(${minuteAngle})`);
+  	document.getElementById("hourHand").setAttribute("transform", `rotate(${hourAngle})`);
+       }
+
+	setInterval(updateClock, 1000);
+	updateClock(); // call once on load
+
+    function scroll() {
+      offset -= 4;
+      if (offset < -text.getComputedTextLength()) offset = 2260;
+      text.setAttribute("x", offset);
+      requestAnimationFrame(scroll);
+    }
+
+    text.addEventListener("click", () => {
+      textClicked = !textClicked;
+      text.setAttribute("fill", textClicked ? "red" : "#f8f8f8");
+    });
+
+    led.addEventListener("click", () => {
+      ledOn = !ledOn;
+      led.setAttribute("fill", ledOn ? "red" : "#330000");
+      led.setAttribute("class", ledOn ? "blinking glow" : "");
+      led.setAttribute("filter", ledOn ? "url(#glow)" : "none");
+      dropdown.setAttribute("visibility", ledOn ? "hidden" : "visible");
+    });
+
+    // 🐍 Snake Movement
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp")    { dx = 0; dy = -3; }
+      else if (e.key === "ArrowDown")  { dx = 0; dy = 3; }
+      else if (e.key === "ArrowLeft")  { dx = -3; dy = 0; }
+      else if (e.key === "ArrowRight") { dx = 3; dy = 0; }
+    });
+
+    function moveSnake() {
+      if (!snake) return;
+      let x = parseFloat(snake.getAttribute("x"));
+      let y = parseFloat(snake.getAttribute("y"));
+      x += dx;
+      y += dy;
+      if (x < 0) x = 2260;
+      if (x > 2260) x = 0;
+      if (y < 0) y = 1000;
+      if (y > 1000) y = 0;
+      snake.setAttribute("x", x);
+      snake.setAttribute("y", y);
+    }
+
+    setInterval(moveSnake, 30);
+    scroll();
+
+]]></script>
+<foreignObject width="100%" height="100%" x="900" y="200" pointer-events="none">
     <body xmlns="http://www.w3.org/1999/xhtml" style="margin:0;padding:0;">
       <canvas id="glCanvas" width="600" height="400" style="background:transparent;"></canvas>
       <script type="application/ecmascript"><![CDATA[
@@ -241,80 +326,4 @@
     </body>
   </foreignObject>
 
-
-  <!-- 🧠 Logic -->
-  <script type="application/ecmascript"><![CDATA[
-    const text = document.getElementById("bannerText");
-    const led = document.getElementById("led");
-    const dropdown = document.getElementById("dropdown");
-    const snake = document.getElementById("snake");
-
-    let offset = 2260;
-    let textClicked = false;
-    let ledOn = true;
-    let dx = 3, dy = 0;
-    
-    function updateClock() {
-  	const now = new Date();
-  	const sec = now.getSeconds();
-  	const min = now.getMinutes();
-  	const hr = now.getHours() % 12;
-
-  	const secondAngle = sec * 6;             // 360° / 60s
-  	const minuteAngle = min * 6 + sec * 0.1;  // 360° / 60min
-  	const hourAngle = hr * 30 + min * 0.5;    // 360° / 12hr
-
-  	document.getElementById("secondHand").setAttribute("transform", `rotate(${secondAngle})`);
-  	document.getElementById("minuteHand").setAttribute("transform", `rotate(${minuteAngle})`);
-  	document.getElementById("hourHand").setAttribute("transform", `rotate(${hourAngle})`);
-       }
-
-	setInterval(updateClock, 1000);
-	updateClock(); // call once on load
-
-    function scroll() {
-      offset -= 4;
-      if (offset < -text.getComputedTextLength()) offset = 2260;
-      text.setAttribute("x", offset);
-      requestAnimationFrame(scroll);
-    }
-
-    text.addEventListener("click", () => {
-      textClicked = !textClicked;
-      text.setAttribute("fill", textClicked ? "red" : "#f8f8f8");
-    });
-
-    led.addEventListener("click", () => {
-      ledOn = !ledOn;
-      led.setAttribute("fill", ledOn ? "red" : "#330000");
-      led.setAttribute("class", ledOn ? "blinking glow" : "");
-      led.setAttribute("filter", ledOn ? "url(#glow)" : "none");
-      dropdown.setAttribute("visibility", ledOn ? "hidden" : "visible");
-    });
-
-    // 🐍 Snake Movement
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowUp")    { dx = 0; dy = -3; }
-      else if (e.key === "ArrowDown")  { dx = 0; dy = 3; }
-      else if (e.key === "ArrowLeft")  { dx = -3; dy = 0; }
-      else if (e.key === "ArrowRight") { dx = 3; dy = 0; }
-    });
-
-    function moveSnake() {
-      if (!snake) return;
-      let x = parseFloat(snake.getAttribute("x"));
-      let y = parseFloat(snake.getAttribute("y"));
-      x += dx;
-      y += dy;
-      if (x < 0) x = 2260;
-      if (x > 2260) x = 0;
-      if (y < 0) y = 1000;
-      if (y > 1000) y = 0;
-      snake.setAttribute("x", x);
-      snake.setAttribute("y", y);
-    }
-
-    setInterval(moveSnake, 30);
-    scroll();
-  ]]></script>
 </svg>
