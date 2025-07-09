@@ -1,0 +1,176 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" viewBox="0 0 2260 1000" width="100%" height="100%">
+  <style>
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.blinking {
+  animation: blink 1s infinite;
+}
+.glow {
+  filter: url(#glow);
+}
+.glass-quote {
+  width: 1500px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 30px;
+  color: #f0f0f0;
+
+  background: rgba(255, 255, 255, 0);
+  border-radius: 16px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+  </style>
+
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+    <filter id="glass-blur" x="0" y="0" width="100%" height="100%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="atop"/>
+    </filter>
+  </defs>
+
+  <!-- 🐍 Snake in background -->
+
+  <rect width="2260" height="1000" fill="#001f3f" />
+  <rect id="snake" x="100" y="100" width="20" height="20" fill="#00FF00" stroke="#003300" stroke-width="1" opacity="1.0" class="glow"/>
+
+  <foreignObject x="380" y="100" width="1500" height="120">
+    <div xmlns="http://www.w3.org/1999/xhtml" class="glass-quote glow">
+      "We suffer more in imagination than in reality." — Seneca
+    </div>
+  </foreignObject>
+
+  <circle id="led" cx="2200" cy="130" r="20" fill="red" filter="url(#glow)" cursor="pointer" class="blinking glow" onclick="toggleLED()" data-off="false" />
+  <g id="clock" transform="translate(120,120)" class="glow glass-quote">
+    <circle r="50" fill="#ffffff10" stroke="white" stroke-opacity="0.3" stroke-width="3"/>
+    <line id="hourHand" x1="0" y1="0" x2="0" y2="-25" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line id="minuteHand" x1="0" y1="0" x2="0" y2="-35" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <line id="secondHand" x1="0" y1="0" x2="0" y2="-45" stroke="red" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <g id="dropdown" visibility="hidden">
+    <rect x="1980" y="160" width="250" height="320" rx="15" ry="15" fill="white" fill-opacity="0.05" stroke="white" stroke-width="1" />
+    <a ns1:href="https://www.youtube.com" target="_blank">
+      <image href="https://cdn.simpleicons.org/youtube/FFFFFF" x="2000" y="175" width="24" height="24" />
+      <text x="2035" y="195" font-size="20" fill="#f8f8f8">YouTube</text>
+    </a>
+    <a ns1:href="https://mail.google.com" target="_blank">
+      <image href="https://cdn.simpleicons.org/gmail/FFFFFF" x="2000" y="215" width="24" height="24" />
+      <text x="2035" y="235" font-size="20" fill="#f8f8f8">Gmail</text>
+    </a>
+    <a ns1:href="https://www.google.com" target="_blank">
+      <image href="https://cdn.simpleicons.org/google/FFFFFF" x="2000" y="255" width="24" height="24" />
+      <text x="2035" y="275" font-size="20" fill="#f8f8f8">Google</text>
+    </a>
+    <a ns1:href="https://www.wikipedia.org" target="_blank">
+      <image href="https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png" x="2000" y="295" width="24" height="24" />
+      <text x="2035" y="315" font-size="20" fill="#f8f8f8">Wikipedia</text>
+    </a>
+    <a ns1:href="https://www.reddit.com" target="_blank">
+      <image href="https://cdn.simpleicons.org/reddit/FFFFFF" x="2000" y="335" width="24" height="24" />
+      <text x="2035" y="355" font-size="20" fill="#f8f8f8">Reddit</text>
+    </a>
+    <a ns1:href="https://github.com" target="_blank">
+      <image href="https://cdn.simpleicons.org/github/FFFFFF" x="2000" y="375" width="24" height="24" />
+      <text x="2035" y="395" font-size="20" fill="#f8f8f8">GitHub</text>
+    </a>
+    <a ns1:href="https://chat.openai.com" target="_blank">
+      <image href="https://cdn.simpleicons.org/openai/FFFFFF" x="2000" y="415" width="24" height="24" />
+      <text x="2035" y="435" font-size="20" fill="#f8f8f8">ChatGPT</text>
+    </a>
+  </g>
+
+  <text id="bannerText" x="2260" y="800" font-size="80" font-family="sans-serif" fill="#f8f8f8" cursor="pointer" class="glow">
+    Hi! Welcome to Gaurang's Website. Made with SVG. Click me!
+  </text>
+
+  <!-- 🧠 Logic -->
+  <script type="application/ecmascript"><![CDATA[
+    const text = document.getElementById("bannerText");
+    const led = document.getElementById("led");
+    const dropdown = document.getElementById("dropdown");
+    const snake = document.getElementById("snake");
+
+    let offset = 2260;
+    let textClicked = false;
+    let ledOn = true;
+    let dx = 3, dy = 0;
+    
+    function updateClock() {
+  	const now = new Date();
+  	const sec = now.getSeconds();
+  	const min = now.getMinutes();
+  	const hr = now.getHours() % 12;
+
+  	const secondAngle = sec * 6;             // 360° / 60s
+  	const minuteAngle = min * 6 + sec * 0.1;  // 360° / 60min
+  	const hourAngle = hr * 30 + min * 0.5;    // 360° / 12hr
+
+  	document.getElementById("secondHand").setAttribute("transform", `rotate(${secondAngle})`);
+  	document.getElementById("minuteHand").setAttribute("transform", `rotate(${minuteAngle})`);
+  	document.getElementById("hourHand").setAttribute("transform", `rotate(${hourAngle})`);
+       }
+
+	setInterval(updateClock, 1000);
+	updateClock(); // call once on load
+
+    function scroll() {
+      offset -= 4;
+      if (offset < -text.getComputedTextLength()) offset = 2260;
+      text.setAttribute("x", offset);
+      requestAnimationFrame(scroll);
+    }
+
+    text.addEventListener("click", () => {
+      textClicked = !textClicked;
+      text.setAttribute("fill", textClicked ? "red" : "#f8f8f8");
+    });
+
+    led.addEventListener("click", () => {
+      ledOn = !ledOn;
+      led.setAttribute("fill", ledOn ? "red" : "#330000");
+      led.setAttribute("class", ledOn ? "blinking glow" : "");
+      led.setAttribute("filter", ledOn ? "url(#glow)" : "none");
+      dropdown.setAttribute("visibility", ledOn ? "hidden" : "visible");
+    });
+
+    // 🐍 Snake Movement
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp")    { dx = 0; dy = -3; }
+      else if (e.key === "ArrowDown")  { dx = 0; dy = 3; }
+      else if (e.key === "ArrowLeft")  { dx = -3; dy = 0; }
+      else if (e.key === "ArrowRight") { dx = 3; dy = 0; }
+    });
+
+    function moveSnake() {
+      if (!snake) return;
+      let x = parseFloat(snake.getAttribute("x"));
+      let y = parseFloat(snake.getAttribute("y"));
+      x += dx;
+      y += dy;
+      if (x < 0) x = 2260;
+      if (x > 2260) x = 0;
+      if (y < 0) y = 1000;
+      if (y > 1000) y = 0;
+      snake.setAttribute("x", x);
+      snake.setAttribute("y", y);
+    }
+
+    setInterval(moveSnake, 30);
+    scroll();
+  ]]></script>
+</svg>
+
